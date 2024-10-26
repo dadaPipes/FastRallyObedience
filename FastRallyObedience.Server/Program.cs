@@ -1,39 +1,63 @@
 using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
+using FastRallyObedience.Server.Data;
+using Microsoft.EntityFrameworkCore;
 
-namespace FastRallyObedience.Server;
+var builder = WebApplication.CreateBuilder(args);
 
-public class Program
+builder.Services.AddHttpClient();
+
+builder.Services
+    .AddAuthenticationCookie(validFor: TimeSpan.FromMinutes(30))
+    .AddAuthorization()
+    .AddFastEndpoints()
+    .SwaggerDocument();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    public static void Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
-
-        builder.Services.AddHttpClient();
-
-        builder.Services
-           .AddAuthenticationCookie(validFor: TimeSpan.FromMinutes(30))
-           .AddAuthorization()
-           .AddFastEndpoints()
-           .SwaggerDocument();
-
-        var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        options =>
         {
+            
+        });
 
-        }
+    options.EnableDetailedErrors(true);
+    options.EnableSensitiveDataLogging(true);
+});
 
-        app.UseHttpsRedirection();
-
-        app.UseDefaultExceptionHandler()
-           .UseAuthentication()
-           .UseAuthorization()
-           .UseFastEndpoints()
-           .UseSwaggerGen();
-
-        app.Run();
-    }
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("devPolicy",
+            builder => builder.WithOrigins("https://localhost:5001")
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials());
+    });
 }
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("devPolicy");
+}
+
+app.UseDefaultExceptionHandler()
+   .UseAuthentication()
+   .UseAuthorization()
+   .UseFastEndpoints()
+   .UseSwaggerGen();
+
+app.Run();
