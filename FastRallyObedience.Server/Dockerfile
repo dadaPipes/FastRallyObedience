@@ -2,13 +2,12 @@
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
 # Use the .NET SDK to build the project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["FastRallyObedience.Server/FastRallyObedience.Server.csproj", "FastRallyObedience.Server/"]
+COPY "FastRallyObedience.Server/FastRallyObedience.Server.csproj", "FastRallyObedience.Server/"
 RUN dotnet restore "./FastRallyObedience.Server/FastRallyObedience.Server.csproj"
 COPY . .
 WORKDIR "/src/FastRallyObedience.Server"

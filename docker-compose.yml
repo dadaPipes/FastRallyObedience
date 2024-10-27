@@ -5,7 +5,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080" # HTTP
-      - "8081:8081" # HTTPS
     depends_on:
       - sqlserver
 
@@ -16,3 +15,11 @@ services:
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
+
+  fastrallyobedience.client:
+    build:
+      context: ./FastRallyObedience.Client
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+  
