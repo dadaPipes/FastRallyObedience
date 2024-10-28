@@ -2,6 +2,7 @@ using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
 using FastRallyObedience.Server.Data;
+using GetUser;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,8 +12,10 @@ builder.Services.AddHttpClient();
 builder.Services
     .AddAuthenticationCookie(validFor: TimeSpan.FromMinutes(30))
     .AddAuthorization()
-    .AddFastEndpoints()
+.AddFastEndpoints()
     .SwaggerDocument();
+
+builder.Services.AddScoped<GetUserData>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
